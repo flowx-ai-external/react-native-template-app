@@ -1,0 +1,64 @@
+{
+  "name": "react-native-template-app",
+  "main": "expo-router/entry",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "lint": "eslint .",
+    "format": "prettier --write ."
+  },
+  "dependencies": {
+    "@flowx/core-sdk": "<SDK_VERSION>",
+    "@flowx/core-theme": "<SDK_VERSION>",
+    "@flowx/react-native-sdk": "<SDK_VERSION>",
+    "@flowx/react-native-theme": "<SDK_VERSION>",
+    "@flowx/react-native-ui-toolkit": "<SDK_VERSION>",
+    "@react-native-async-storage/async-storage": "3.1.0",
+    "@react-native-community/datetimepicker": "9.1.0",
+    "@react-native-community/slider": "5.2.0",
+    "@react-navigation/elements": "^2.9.19",
+    "@react-navigation/native": "^7.2.5",
+    "@react-navigation/native-stack": "^7.16.0",
+    "axios": "1.16.1",
+    "expo": "56.0.6",
+    "expo-constants": "56.0.16",
+    "expo-dev-client": "56.0.16",
+    "expo-linking": "56.0.12",
+    "expo-router": "56.2.7",
+    "expo-splash-screen": "56.0.10",
+    "react": "19.2.3",
+    "react-native": "0.85.3",
+    "react-native-keyboard-controller": "1.21.8",
+    "react-native-reanimated": "4.3.1",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "4.25.2",
+    "react-native-svg": "15.15.5",
+    "react-native-worklets": "0.8.3"
+  },
+  "expo": {
+    "install": {
+      "exclude": [
+        "expo-constants",
+        "expo-dev-client",
+        "expo-splash-screen",
+        "typescript"
+      ]
+    }
+  },
+  "overrides": {
+    "react-dom": "19.2.3"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.4",
+    "@types/react": "~19.2.15",
+    "eslint": "9.39.4",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "eslint-plugin-react-native": "5.0.0",
+    "globals": "17.6.0",
+    "prettier": "3.8.3",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "8.60.0"
+  }
+}
