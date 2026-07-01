@@ -127,6 +127,8 @@ src/
 ├── auth/
 │   ├── AuthContext.tsx      # Org lookup + password grant + refresh-token rehydration + silent refresh
 │   └── LoginModal.tsx       # FlxModal with username/password, calls AuthContext.login
+├── components/
+│   └── ClientDetailsForm.tsx # Example self-managed custom component (client details form)
 ├── environment.ts           # FlowX endpoints + Keycloak config
 ├── hooks/
 │   └── useLanguage.tsx      # AsyncStorage-persisted language (en-US / ro-RO)
@@ -145,6 +147,50 @@ src/
    `FlowX.setAccessToken`; the refresh token is persisted.
 4. A `setTimeout` schedules a silent refresh ~60s before expiry.
 5. Logout clears tokens and the stored refresh token.
+
+
+## Custom Components
+
+`src/components/ClientDetailsForm.tsx` is a worked example of a **self-managed
+custom component** — a host-authored React Native component the FlowX renderer
+mounts wherever a process references its `componentIdentifier`.
+
+It renders a client details form (first name, last name, date of birth) that:
+
+- **Seeds itself from initial data** — reads `input.data` (the process data
+  mapped into the component) into local form state.
+- **Sends the params via an action** — on submit, calls the `saveData` action on
+  `input.actionsFn` with the collected values:
+  `input.actionsFn.saveData({ firstName, lastName, dateOfBirth })`.
+
+Every custom component receives the same contract
+(`FlxCustomComponentProps`):
+
+| Prop | Purpose |
+| --- | --- |
+| `input.data` | Resolved input data mapped from the process (initial values) |
+| `input.actions` | Actions wired to this component in the process definition |
+| `input.actionsFn` | Dispatchers keyed by action name; call to send params upstream |
+| `registerValidation` | Gate form submission on a sync/async predicate |
+| `saveData` | Register a getter merged into process data on form submit |
+| `isSubmitted` | `true` once the enclosing form has been submitted |
+
+### Registering a custom component
+
+Pass a map of components keyed by `componentIdentifier` to `FlowX.configure`
+(see `src/app/ProcessScreen.tsx`). They register into the shared component
+registry before the process view mounts:
+
+```ts
+import { ClientDetailsForm } from '@/components/ClientDetailsForm'
+
+FlowX.configure({
+  // ...baseURL, organizationId, themeId, etc.
+  components: {
+    ClientDetailsForm, // key must match the componentIdentifier in the process
+  },
+})
+```
 
 
 ## Documentation

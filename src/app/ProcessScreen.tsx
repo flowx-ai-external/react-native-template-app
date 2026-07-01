@@ -4,8 +4,14 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { FlowX, FlxProcessHandle } from '@flowx/react-native-sdk';
 import { FlxText } from '@flowx/react-native-ui-toolkit';
 
+import { ClientDetailsForm } from '@/components/ClientDetailsForm';
 import { environment } from '../environment';
 import { type ProcessScreenProps } from './types';
+
+// Self-managed custom components, keyed by componentIdentifier.
+const customComponents = {
+  ClientDetailsForm,
+};
 
 const ProcessScreen = ({
   values,
@@ -41,6 +47,7 @@ const ProcessScreen = ({
       themeId,
       isDraft: false,
       organizationId,
+      components: customComponents,
     })
   }, [language, locale, organizationId, themeId])
 
