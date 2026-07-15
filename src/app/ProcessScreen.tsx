@@ -5,6 +5,7 @@ import { FlowX, FlxProcessHandle } from '@flowx/react-native-sdk';
 import { FlxText } from '@flowx/react-native-ui-toolkit';
 
 import { ClientDetailsForm } from '@/components/ClientDetailsForm';
+import { customValidators } from '@/validators/customValidators';
 import { environment } from '../environment';
 import { type ProcessScreenProps } from './types';
 
@@ -18,12 +19,14 @@ const ProcessScreen = ({
   accessToken,
   organizationId,
   onBack,
+  onProcessStarted,
 }: ProcessScreenProps) => {
   const [handle, setHandle] = useState<FlxProcessHandle | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const handleRef = useRef<FlxProcessHandle | null>(null)
   const onBackRef = useRef(onBack)
+  const onProcessStartedRef = useRef(onProcessStarted)
 
   useEffect(() => {
     handleRef.current = handle
@@ -33,9 +36,21 @@ const ProcessScreen = ({
     onBackRef.current = onBack
   }, [onBack])
 
-  const { language, locale, themeId, workspaceId, projectId, processName } = values
+  useEffect(() => {
+    onProcessStartedRef.current = onProcessStarted
+  }, [onProcessStarted])
 
-  // FloX SDK configuration
+  const { language, locale, themeId } = values
+
+  // Narrowed launch primitives — used directly below so the effect deps stay simple.
+  const isContinue = values.mode === 'continue'
+  const processInstanceUuid = values.mode === 'continue' ? values.processInstanceUuid : undefined
+  const workspaceId = values.mode === 'start' ? values.workspaceId : undefined
+  const projectId = values.mode === 'start' ? values.projectId : undefined
+  const processName = values.mode === 'start' ? values.processName : undefined
+
+  // FlowX SDK configuration. Custom components and validators are registered
+  // here; the SDK reads them when the process view mounts.
   useEffect(() => {
     if (!organizationId) return
     FlowX.configure({
@@ -48,6 +63,7 @@ const ProcessScreen = ({
       isDraft: false,
       organizationId,
       components: customComponents,
+      validators: customValidators,
     })
   }, [language, locale, organizationId, themeId])
 
@@ -57,7 +73,7 @@ const ProcessScreen = ({
     FlowX.setAccessToken(accessToken)
   }, [accessToken])
 
-  // Start or continue process
+  // Start or continue the process, depending on the launch mode.
   useEffect(() => {
     if (!accessToken || !organizationId) return
     let cancelled = false
@@ -65,14 +81,23 @@ const ProcessScreen = ({
     const onClose = () => onBackRef.current()
     const onProcessEnded = () => onBackRef.current()
 
-    const promise = FlowX.startProcess({
-      workspaceId,
-      projectId,
-      processName,
-      isModal: true,
-      onClose,
-      onProcessEnded,
-    })
+    const promise =
+      isContinue && processInstanceUuid
+        ? FlowX.continueProcess({
+            processInstanceUuid,
+            isModal: true,
+            onClose,
+            onProcessEnded,
+          })
+        : FlowX.startProcess({
+            workspaceId: workspaceId!,
+            projectId: projectId!,
+            processName: processName!,
+            isModal: true,
+            onClose,
+            onProcessEnded,
+            onProcessStarted: (uuid) => onProcessStartedRef.current?.(uuid),
+          })
 
     promise
       .then((h) => {
@@ -94,10 +119,13 @@ const ProcessScreen = ({
     }
   }, [
     accessToken,
+    organizationId,
+    // Re-run whenever the launch target changes.
+    isContinue,
+    processInstanceUuid,
     workspaceId,
     projectId,
     processName,
-    organizationId,
   ])
 
   const ProcessView = handle?.ProcessView

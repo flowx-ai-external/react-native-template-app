@@ -6,7 +6,9 @@ Android. Provides:
 - A `LoginModal` component that displays a username/password form and calls `AuthContext.login`.
 - Refresh-token persistence in AsyncStorage with silent refresh.
 - A `ProcessScreen` component that runs a FlowX process via
-  `@flowx/react-native-sdk` (`FlowX.startProcess`).
+  `@flowx/react-native-sdk` (`FlowX.startProcess` / `FlowX.continueProcess`).
+- A worked **custom component** (`ClientDetailsForm`) and **custom validators**
+  (`cnpValidator`, `minLength`) registered through `FlowX.configure`.
 
 ## Prerequisites
 
@@ -122,18 +124,19 @@ If a `react-native-worklets/plugin` babel error appears, ensure both
 src/
 ├── app/
 │   ├── config.ts            # FlowX process, workspace, theme, language, and locale config
-│   ├── index.tsx            # App providers + authenticated main screen with start/logout actions
-│   └── ProcessScreen.tsx    # Calls FlowX.startProcess and renders the returned ProcessView
+│   ├── index.tsx            # App providers + dashboard with start / continue / logout actions
+│   ├── types.ts             # Launch setup types (start | continue discriminated union)
+│   └── ProcessScreen.tsx    # Calls FlowX.startProcess / continueProcess and renders the ProcessView
 ├── auth/
 │   ├── AuthContext.tsx      # Org lookup + password grant + refresh-token rehydration + silent refresh
 │   └── LoginModal.tsx       # FlxModal with username/password, calls AuthContext.login
 ├── components/
 │   └── ClientDetailsForm.tsx # Example self-managed custom component (client details form)
+├── validators/
+│   └── customValidators.ts  # Example custom validators (Romanian CNP, minLength)
 ├── environment.ts           # FlowX endpoints + Keycloak config
-├── hooks/
-│   └── useLanguage.tsx      # AsyncStorage-persisted language (en-US / ro-RO)
 ├── http/client.ts           # axios with bearer interceptor
-└── storage/storage.ts       # AsyncStorage refresh-token helpers
+└── storage/storage.ts       # AsyncStorage refresh-token + last process instance helpers
 ```
 
 ## Auth Flow
@@ -192,6 +195,70 @@ FlowX.configure({
 })
 ```
 
+
+## Continue Process
+
+Besides starting a fresh instance, the dashboard can **resume** an existing
+process instance via `FlowX.continueProcess`. Unlike `startProcess`, it takes no
+`processName`/`params` — only the `processInstanceUuid` of the instance to
+reattach to (configure the SDK and set the access token first, exactly as for
+`startProcess`).
+
+```ts
+FlowX.continueProcess({
+  processInstanceUuid, // UUID of the instance to resume
+  isModal: true,
+  onClose,
+  onProcessEnded,
+})
+```
+
+How the template wires it up:
+
+1. When a process starts, `ProcessScreen` receives the new instance UUID through
+   `startProcess`'s `onProcessStarted` callback and lifts it to the dashboard,
+   which persists it to AsyncStorage (`flx.lastProcessInstanceUuid`).
+2. The dashboard's **Continue process** button opens a modal prefilled with that
+   last UUID (editable — paste any instance UUID). Confirming mounts
+   `ProcessScreen` in `continue` mode.
+3. `ProcessScreen` branches on the launch mode
+   (`src/app/types.ts` → `StartLaunch | ContinueLaunch`) and calls the matching
+   SDK method.
+
+## Custom Validators
+
+`src/validators/customValidators.ts` provides host-authored **custom validators**
+registered through the `validators` field of `FlowX.configure`. Define the
+validator on a form field in the FlowX Designer (with its error message), then
+register an implementation under the **same name**.
+
+Each entry is a factory that receives the validator's configured params and
+returns the predicate the SDK runs against the field value — return `true` to
+pass, `false` to fail:
+
+```ts
+type ValidatorFn = (...params: string[]) => (value: unknown) => boolean | Promise<boolean>
+```
+
+The template ships two examples:
+
+- **`cnpValidator`** — validates a Romanian national ID (CNP), a port of the iOS
+  template's `CNPValidator` (13 digits with a weighted control digit; sample
+  valid CNP `6030423015815`). Takes no params.
+- **`minLength`** — a param-based example; the field value must be at least `min`
+  characters long.
+
+```ts
+import { customValidators } from '@/validators/customValidators'
+
+FlowX.configure({
+  // ...baseURL, organizationId, themeId, etc.
+  validators: customValidators, // keys must match the validator names in the process
+})
+```
+
+> If a field references a validator name that is not registered, the SDK logs
+> `Custom validator <name> not found` and skips it.
 
 ## Documentation
 
