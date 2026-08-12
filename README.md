@@ -1,266 +1,126 @@
-# FlowX React Native Starter
+# React Native Template Application (Expo)
 
-Starter Expo (SDK 56) container on React native version 0.85.3 for hosting a FlowX process on iOS and
-Android. Provides:
+This application is a template Expo app integrating the FlowX React Native Renderer for running processes and Keycloak for managing the user session.
+The project contains sample implementations of custom components and custom validators, and covers both starting and continuing a process.
 
-- A `LoginModal` component that displays a username/password form and calls `AuthContext.login`.
-- Refresh-token persistence in AsyncStorage with silent refresh.
-- A `ProcessScreen` component that runs a FlowX process via
-  `@flowx/react-native-sdk` (`FlowX.startProcess` / `FlowX.continueProcess`).
-- A worked **custom component** (`ClientDetailsForm`) and **custom validators**
-  (`cnpValidator`, `minLength`) registered through `FlowX.configure`.
+## Project Setup Guide
 
-## Prerequisites
+This document outlines the necessary steps to configure the project to connect to your FLOWX.AI environment.
 
-- Node.js 24+
-- Xcode (iOS) and/or Android Studio
-- FlowX npm registry credentials
+### Prerequisites
 
-## Setup
+Ensure you have the following:
+- Node.js 24 or newer
+- Xcode (for iOS) and/or Android Studio (for Android)
+- FlowX npm registry credentials (auth token and email)
+- Organization ID
+- Environment-specific URLs (Base URL, Static Assets Path, Authentication URL)
+- Organization code and Keycloak Client ID
+- The UUID of the theme to be applied
+- Workspace, Project and Process identifiers for starting a process
 
-### 1. Configure `.npmrc`
+### Configuration Steps
 
-Create a `.npmrc` file with the values provided by FlowX:
+The key configuration areas are detailed below:
 
-```
-# Public npm registry
-registry=https://registry.npmjs.org/
+1. **FlowX npm Registry Access**
 
-# Private FlowX npm registry
-@flowx:registry=https://<AUTH_REPO>
-//<AUTH_REPO>:_auth="<AUTH_TOKEN>"
-//<AUTH_REPO>:email=<AUTH_EMAIL>
-strict-ssl=true
-```
+   To enable npm to download the FLOWX.AI SDK, you must configure your registry credentials.
 
-or if you are using just a private registry:
+   - **File**: `.npmrc` (in the root project directory; create it if it does not exist)
+   - **Action**: Add the following entry containing your credentials received from FlowX.
 
-```
-//<AUTH_REPO>:_auth="<AUTH_TOKEN>"
-//<AUTH_REPO>:email=<AUTH_EMAIL>
-registry=https://<AUTH_REPO>
-strict-ssl=true
-```
+    ```
+    registry=https://registry.npmjs.org/
 
-### 2. Configure FlowX SDK versions
+    @flowx:registry=https://<AUTH_REPO>
+    //<AUTH_REPO>:_auth="<AUTH_TOKEN>"
+    //<AUTH_REPO>:email=<AUTH_EMAIL>
+    strict-ssl=true
+    ```
 
-In `package.json`, replace `<SDK_VERSION>` with the FlowX SDK version you want to use.
-All `@flowx/*` packages must use the same version:
+2. **FLOWX.AI SDK Version**
 
-```json
-"@flowx/core-sdk": "<SDK_VERSION>",
-"@flowx/core-theme": "<SDK_VERSION>",
-"@flowx/react-native-sdk": "<SDK_VERSION>",
-"@flowx/react-native-theme": "<SDK_VERSION>",
-"@flowx/react-native-ui-toolkit": "<SDK_VERSION>"
-```
+   Specify the version of the FLOWX.AI React Native libraries. All `@flowx/*` packages must use the same version.
 
-### 3. Configure environment
+   - **File**: `package.json`
+   - **Action**: Replace `<SDK_VERSION>` with the version you want to use. Note: use a FLOWX platform compatible version of the SDK.
 
-Update `src/environment.ts` with your FlowX deployment details:
+    ```json
+    "@flowx/core-sdk": "<SDK_VERSION>",
+    "@flowx/core-theme": "<SDK_VERSION>",
+    "@flowx/react-native-sdk": "<SDK_VERSION>",
+    "@flowx/react-native-theme": "<SDK_VERSION>",
+    "@flowx/react-native-ui-toolkit": "<SDK_VERSION>"
+    ```
 
-```ts
-export const environment = {
-  production: false,
-  baseUrl: '<BASE_URL>',
-  staticAssetsPath: '<STATIC_ASSETS_PATH>',
-  orgCode: '<ORG_CODE>',
-  processApiPath: '/onboarding',
-  scanTimeout: 50000,
-  keycloak: {
-    issuer: '<KEYCLOAK_URL>',
-    defaultOrganizationName: '<DEFAULT_ORGANIZATION_NAME>',
-    clientId: '<KEYCLOAK_CLIENT>',
-    responseType: 'code',
-    scope: 'openid profile email',
-    requireHttps: true,
-    disableAtHashCheck: false,
-    showDebugInformation: false,
-  },
-}
+3. **Environment configuration**
 
-```
+   Define the connection parameters for your specific FLOWX.AI environment.
 
-The login flow does an org lookup against
-`${baseUrl}/org/api/org/code/${orgCode}` to discover Keycloak's
-`tokenEndpoint`, then runs the `password` grant.
+   - **File**: `src/environment.ts`
+   - **Action**: Fill in the values provided by FlowX.
 
-### 4. Configure the process to boot
+    ```ts
+    export const environment = {
+      production: false,
+      baseUrl: '<BASE_URL>',
+      staticAssetsPath: '<STATIC_ASSETS_PATH>',
+      orgCode: '<ORG_CODE>',
+      processApiPath: '/onboarding',
+      scanTimeout: 50000,
+      keycloak: {
+        issuer: '<KEYCLOAK_URL>',
+        defaultOrganizationName: '<DEFAULT_ORGANIZATION_NAME>',
+        clientId: '<KEYCLOAK_CLIENT>',
+        responseType: 'code',
+        scope: 'openid profile email',
+        requireHttps: true,
+        disableAtHashCheck: false,
+        showDebugInformation: false,
+      },
+    }
+    ```
 
-Update the `appConfig` constant in `src/app/config.ts` with your FlowX process details:
+   The login flow looks the organization up at `${baseUrl}/org/api/org/code/${orgCode}` to discover Keycloak's `tokenEndpoint`, then runs the `password` grant.
 
-```ts
-export const appConfig = {
-  processName: '<PROCESS_NAME>',
-  organizationId: '<ORGANIZATION_ID>',
-  projectId: '<PROJECT_ID>',
-  themeId: '<THEME_ID>',
-  workspaceId: '<WORKSPACE_ID>',
-  language: '<LANGUAGE>',
-  locale: '<LOCALE>',
-} as const
-```
+4. **SDK and process configuration**
 
-## Running
+   Specify the organization id, workspace, project, process name and theme to be used.
+
+   - **File**: `src/app/config.ts`
+   - **Action**: Set the appropriate values for the `appConfig` constant.
+
+    ```ts
+    export const appConfig = {
+      processName: '<PROCESS_NAME>',
+      projectId: '<PROJECT_ID>',
+      themeId: '<THEME_ID>',
+      workspaceId: '<WORKSPACE_ID>',
+      organizationId: '<ORGANIZATION_ID>',
+      language: '<LANGUAGE>',
+      locale: '<LOCALE>',
+    } as const
+    ```
+
+   The same file holds `sdkSettings`, the switchboard for the runtime-tunable SDK features (document caching, foreground refresh, custom headers, interceptors, custom loaders). These are consumed in `src/sdk/flowx.ts`, the single `FlowX.configure()` call site.
+
+## Running the app
 
 ```
 npm install
 npm run ios       # or: npm run android
 ```
 
-If Metro complains about Expo dep versions:
+If Metro complains about Expo dependency versions, run `npx expo install --fix`.
 
-```
-npx expo install --fix
-```
-
-If a `react-native-worklets/plugin` babel error appears, ensure both
-`react-native-reanimated` and `react-native-worklets` are installed
-(they are required by the FlowX RN SDK and `babel-preset-expo`).
-
-## Project Structure
-
-```
-src/
-├── app/
-│   ├── config.ts            # FlowX process, workspace, theme, language, and locale config
-│   ├── index.tsx            # App providers + dashboard with start / continue / logout actions
-│   ├── types.ts             # Launch setup types (start | continue discriminated union)
-│   └── ProcessScreen.tsx    # Calls FlowX.startProcess / continueProcess and renders the ProcessView
-├── auth/
-│   ├── AuthContext.tsx      # Org lookup + password grant + refresh-token rehydration + silent refresh
-│   └── LoginModal.tsx       # FlxModal with username/password, calls AuthContext.login
-├── components/
-│   └── ClientDetailsForm.tsx # Example self-managed custom component (client details form)
-├── validators/
-│   └── customValidators.ts  # Example custom validators (Romanian CNP, minLength)
-├── environment.ts           # FlowX endpoints + Keycloak config
-├── http/client.ts           # axios with bearer interceptor
-└── storage/storage.ts       # AsyncStorage refresh-token + last process instance helpers
-```
-
-## Auth Flow
-
-1. App boots → `AuthProvider` reads stored `flx.refreshToken` from
-   AsyncStorage and tries a silent `refresh_token` grant. If it works,
-   you're already signed in.
-2. Otherwise `LoginModal` is shown. Submitting calls
-   `requestTokens({ grant_type: 'password', username, password })`.
-3. On success the access token is fed into the axios interceptor and
-   `FlowX.setAccessToken`; the refresh token is persisted.
-4. A `setTimeout` schedules a silent refresh ~60s before expiry.
-5. Logout clears tokens and the stored refresh token.
-
-
-## Custom Components
-
-`src/components/ClientDetailsForm.tsx` is a worked example of a **self-managed
-custom component** — a host-authored React Native component the FlowX renderer
-mounts wherever a process references its `componentIdentifier`.
-
-It renders a client details form (first name, last name, date of birth) that:
-
-- **Seeds itself from initial data** — reads `input.data` (the process data
-  mapped into the component) into local form state.
-- **Sends the params via an action** — on submit, calls the `saveData` action on
-  `input.actionsFn` with the collected values:
-  `input.actionsFn.saveData({ firstName, lastName, dateOfBirth })`.
-
-Every custom component receives the same contract
-(`FlxCustomComponentProps`):
-
-| Prop | Purpose |
-| --- | --- |
-| `input.data` | Resolved input data mapped from the process (initial values) |
-| `input.actions` | Actions wired to this component in the process definition |
-| `input.actionsFn` | Dispatchers keyed by action name; call to send params upstream |
-| `registerValidation` | Gate form submission on a sync/async predicate |
-| `saveData` | Register a getter merged into process data on form submit |
-| `isSubmitted` | `true` once the enclosing form has been submitted |
-
-### Registering a custom component
-
-Pass a map of components keyed by `componentIdentifier` to `FlowX.configure`
-(see `src/app/ProcessScreen.tsx`). They register into the shared component
-registry before the process view mounts:
-
-```ts
-import { ClientDetailsForm } from '@/components/ClientDetailsForm'
-
-FlowX.configure({
-  // ...baseURL, organizationId, themeId, etc.
-  components: {
-    ClientDetailsForm, // key must match the componentIdentifier in the process
-  },
-})
-```
-
-
-## Continue Process
-
-Besides starting a fresh instance, the dashboard can **resume** an existing
-process instance via `FlowX.continueProcess`. Unlike `startProcess`, it takes no
-`processName`/`params` — only the `processInstanceUuid` of the instance to
-reattach to (configure the SDK and set the access token first, exactly as for
-`startProcess`).
-
-```ts
-FlowX.continueProcess({
-  processInstanceUuid, // UUID of the instance to resume
-  isModal: true,
-  onClose,
-  onProcessEnded,
-})
-```
-
-How the template wires it up:
-
-1. When a process starts, `ProcessScreen` receives the new instance UUID through
-   `startProcess`'s `onProcessStarted` callback and lifts it to the dashboard,
-   which persists it to AsyncStorage (`flx.lastProcessInstanceUuid`).
-2. The dashboard's **Continue process** button opens a modal prefilled with that
-   last UUID (editable — paste any instance UUID). Confirming mounts
-   `ProcessScreen` in `continue` mode.
-3. `ProcessScreen` branches on the launch mode
-   (`src/app/types.ts` → `StartLaunch | ContinueLaunch`) and calls the matching
-   SDK method.
-
-## Custom Validators
-
-`src/validators/customValidators.ts` provides host-authored **custom validators**
-registered through the `validators` field of `FlowX.configure`. Define the
-validator on a form field in the FlowX Designer (with its error message), then
-register an implementation under the **same name**.
-
-Each entry is a factory that receives the validator's configured params and
-returns the predicate the SDK runs against the field value — return `true` to
-pass, `false` to fail:
-
-```ts
-type ValidatorFn = (...params: string[]) => (value: unknown) => boolean | Promise<boolean>
-```
-
-The template ships two examples:
-
-- **`cnpValidator`** — validates a Romanian national ID (CNP), a port of the iOS
-  template's `CNPValidator` (13 digits with a weighted control digit; sample
-  valid CNP `6030423015815`). Takes no params.
-- **`minLength`** — a param-based example; the field value must be at least `min`
-  characters long.
-
-```ts
-import { customValidators } from '@/validators/customValidators'
-
-FlowX.configure({
-  // ...baseURL, organizationId, themeId, etc.
-  validators: customValidators, // keys must match the validator names in the process
-})
-```
-
-> If a field references a validator name that is not registered, the SDK logs
-> `Custom validator <name> not found` and skips it.
+If a `react-native-worklets/plugin` babel error appears, ensure both `react-native-reanimated` and `react-native-worklets` are installed — they are required by the FlowX RN SDK and `babel-preset-expo`.
 
 ## Documentation
 
 - [FlowX React Native Renderer](https://docs.flowx.ai/5.9/sdks/react-native-renderer)
 - [Expo Router](https://docs.expo.dev/router/introduction/)
+
+## License
+
+Copyright FlowX.ai 2026

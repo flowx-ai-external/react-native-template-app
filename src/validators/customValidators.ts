@@ -11,10 +11,8 @@
 // Mirrors the SDK's ValidatorFn contract passed to FlowX.configure({ validators }).
 export type ValidatorFn = (...params: string[]) => (value: unknown) => boolean | Promise<boolean>
 
-// Romanian national identification number (CNP) validator — a port of the iOS
-// template's CNPValidator. A CNP is 13 digits; the 13th is a control digit
-// derived from the first 12 weighted by a fixed key. Sample valid CNP:
-// 6030423015815.
+// Romanian national identification number (CNP): 13 digits, the 13th a control
+// digit derived from the first 12 weighted by a fixed key. Sample: 6030423015815.
 const CNP_CONTROL_KEY = [2, 7, 9, 1, 4, 6, 3, 5, 8, 2, 7, 9]
 
 const isValidCnp = (cnp: string): boolean => {

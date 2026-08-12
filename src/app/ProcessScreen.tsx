@@ -1,18 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react'
+import { ActivityIndicator, Alert, StyleSheet, View } from 'react-native'
 
-import { FlowX, FlxProcessHandle } from '@flowx/react-native-sdk';
-import { FlxText } from '@flowx/react-native-ui-toolkit';
+import { FlowX, FlxProcessHandle } from '@flowx/react-native-sdk'
+import { FlxText } from '@flowx/react-native-ui-toolkit'
 
-import { ClientDetailsForm } from '@/components/ClientDetailsForm';
-import { customValidators } from '@/validators/customValidators';
-import { environment } from '../environment';
-import { type ProcessScreenProps } from './types';
-
-// Self-managed custom components, keyed by componentIdentifier.
-const customComponents = {
-  ClientDetailsForm,
-};
+import { configureFlowX } from '@/sdk/flowx'
+import { sdkSettings } from './config'
+import { type ProcessScreenProps } from './types'
 
 const ProcessScreen = ({
   values,
@@ -21,6 +15,10 @@ const ProcessScreen = ({
   onBack,
   onProcessStarted,
 }: ProcessScreenProps) => {
+  // Gate on token availability, not its value: a silent refresh must not tear
+  // down a running process. The rotated token arrives via setAccessToken below.
+  const hasAccessToken = !!accessToken
+
   const [handle, setHandle] = useState<FlxProcessHandle | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -40,7 +38,7 @@ const ProcessScreen = ({
     onProcessStartedRef.current = onProcessStarted
   }, [onProcessStarted])
 
-  const { language, locale, themeId } = values
+  const { themeId } = values
 
   // Narrowed launch primitives — used directly below so the effect deps stay simple.
   const isContinue = values.mode === 'continue'
@@ -49,23 +47,11 @@ const ProcessScreen = ({
   const projectId = values.mode === 'start' ? values.projectId : undefined
   const processName = values.mode === 'start' ? values.processName : undefined
 
-  // FlowX SDK configuration. Custom components and validators are registered
-  // here; the SDK reads them when the process view mounts.
+  // Declared before the launch effect so the config is in place at start.
   useEffect(() => {
     if (!organizationId) return
-    FlowX.configure({
-      baseURL: environment.baseUrl,
-      processApiPath: environment.processApiPath,
-      language,
-      locale,
-      staticAssetsPath: environment.staticAssetsPath,
-      themeId,
-      isDraft: false,
-      organizationId,
-      components: customComponents,
-      validators: customValidators,
-    })
-  }, [language, locale, organizationId, themeId])
+    configureFlowX({ settings: sdkSettings, organizationId, themeId })
+  }, [organizationId, themeId])
 
   // Set access token
   useEffect(() => {
@@ -75,11 +61,31 @@ const ProcessScreen = ({
 
   // Start or continue the process, depending on the launch mode.
   useEffect(() => {
-    if (!accessToken || !organizationId) return
+    if (!hasAccessToken || !organizationId) return
     let cancelled = false
 
-    const onClose = () => onBackRef.current()
+    // Close-X request. Notification only: the session stays live, so the host
+    // confirms first. Closing means unmounting ProcessView, which onBack does.
+    // Omitting onClose hides the close-X altogether.
+    const onClose = (processName?: string) => {
+      Alert.alert(
+        'Close process',
+        `Are you sure you want to close ${processName ?? 'this process'}?`,
+        [
+          // Cancel does nothing: the session is still live and simply carries on.
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Close process',
+            style: 'destructive',
+            onPress: () => onBackRef.current(),
+          },
+        ]
+      )
+    }
     const onProcessEnded = () => onBackRef.current()
+    // Action failure hook — name only, no payload.
+    const onActionError = (actionName?: string) =>
+      console.warn('[FlowX] action failed:', actionName ?? '(unnamed)')
 
     const promise =
       isContinue && processInstanceUuid
@@ -88,6 +94,7 @@ const ProcessScreen = ({
             isModal: true,
             onClose,
             onProcessEnded,
+            onActionError,
           })
         : FlowX.startProcess({
             workspaceId: workspaceId!,
@@ -96,6 +103,7 @@ const ProcessScreen = ({
             isModal: true,
             onClose,
             onProcessEnded,
+            onActionError,
             onProcessStarted: (uuid) => onProcessStartedRef.current?.(uuid),
           })
 
@@ -118,7 +126,7 @@ const ProcessScreen = ({
       setHandle(null)
     }
   }, [
-    accessToken,
+    hasAccessToken,
     organizationId,
     // Re-run whenever the launch target changes.
     isContinue,
@@ -155,7 +163,7 @@ const ProcessScreen = ({
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  fallback: { flex: 1, alignItems: 'center', justifyContent: 'center'},
+  fallback: { flex: 1, alignItems: 'center', justifyContent: 'center' },
 })
 
-export { ProcessScreen };
+export { ProcessScreen }

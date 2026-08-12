@@ -16,5 +16,4 @@ export const saveLastProcessInstanceUuid = (uuid: string) =>
 
 export const readLastProcessInstanceUuid = () => AsyncStorage.getItem(LAST_PROCESS_INSTANCE_KEY)
 
-export const clearLastProcessInstanceUuid = () =>
-  AsyncStorage.removeItem(LAST_PROCESS_INSTANCE_KEY)
+export const clearLastProcessInstanceUuid = () => AsyncStorage.removeItem(LAST_PROCESS_INSTANCE_KEY)

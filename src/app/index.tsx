@@ -14,12 +14,14 @@ import {
 
 import { AuthProvider, useAuth } from '@/auth/AuthContext'
 import { LoginModal } from '@/auth/LoginModal'
+import { configureFlowX } from '@/sdk/flowx'
+import { registerObservability } from '@/sdk/observability'
 import {
   clearLastProcessInstanceUuid,
   readLastProcessInstanceUuid,
   saveLastProcessInstanceUuid,
 } from '@/storage/storage'
-import { appConfig } from './config'
+import { appConfig, sdkSettings } from './config'
 import { ProcessScreen } from './ProcessScreen'
 import { type ProcessSetupValues } from './types'
 
@@ -33,15 +35,12 @@ const MainScreen = () => {
   const [continueVisible, setContinueVisible] = useState(false)
   const [continueUuid, setContinueUuid] = useState('')
 
+  const effectiveOrganizationId = appConfig.organizationId || organizationId
+
   // Shared SDK config values used by both launch modes.
   const configValues = useMemo(
-    () => ({
-      organizationId: appConfig.organizationId || organizationId,
-      themeId: appConfig.themeId,
-      language: appConfig.language,
-      locale: appConfig.locale,
-    }),
-    [organizationId]
+    () => ({ organizationId: effectiveOrganizationId, themeId: appConfig.themeId }),
+    [effectiveOrganizationId]
   )
 
   // Rehydrate the last started instance UUID so "Continue process" survives restarts.
@@ -54,6 +53,29 @@ const MainScreen = () => {
       active = false
     }
   }, [])
+
+  // Session-independent, so registered here once rather than per launch.
+  useEffect(
+    () =>
+      registerObservability({
+        // A backend-initiated swap becomes the new "continue" target.
+        onNewProcess: (uuid) => {
+          setLastInstanceUuid(uuid)
+          saveLastProcessInstanceUuid(uuid).catch(() => undefined)
+        },
+      }),
+    []
+  )
+
+  // Config in place before anything launches; ProcessScreen re-applies it.
+  useEffect(() => {
+    if (!effectiveOrganizationId) return
+    configureFlowX({
+      settings: sdkSettings,
+      organizationId: effectiveOrganizationId,
+      themeId: appConfig.themeId,
+    })
+  }, [effectiveOrganizationId])
 
   const startProcess = useCallback(() => {
     setProcessSetup({
