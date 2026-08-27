@@ -21,9 +21,10 @@ import {
   readLastProcessInstanceUuid,
   saveLastProcessInstanceUuid,
 } from '@/storage/storage'
+import { ChatScreen } from './ChatScreen'
 import { appConfig, sdkSettings } from './config'
 import { ProcessScreen } from './ProcessScreen'
-import { type ProcessSetupValues, type UiFlowSetupValues } from './types'
+import { type ChatSetupValues, type ProcessSetupValues, type UiFlowSetupValues } from './types'
 import { UiFlowScreen } from './UiFlowScreen'
 
 const MainScreen = () => {
@@ -33,13 +34,14 @@ const MainScreen = () => {
 
   const [processSetup, setProcessSetup] = useState<ProcessSetupValues | null>(null)
   const [uiFlowSetup, setUiFlowSetup] = useState<UiFlowSetupValues | null>(null)
+  const [chatSetup, setChatSetup] = useState<ChatSetupValues | null>(null)
   const [lastInstanceUuid, setLastInstanceUuid] = useState<string | null>(null)
   const [continueVisible, setContinueVisible] = useState(false)
   const [continueUuid, setContinueUuid] = useState('')
 
   const effectiveOrganizationId = appConfig.organizationId || organizationId
 
-  // Shared SDK config values used by both launch modes.
+  // Shared SDK config values used by every launch mode.
   const configValues = useMemo(
     () => ({ organizationId: effectiveOrganizationId, themeId: appConfig.themeId }),
     [effectiveOrganizationId]
@@ -89,13 +91,21 @@ const MainScreen = () => {
     })
   }, [configValues])
 
-  // One surface at a time: opening a session drops any live one of either kind.
   const startUiFlow = useCallback(() => {
     setUiFlowSetup({
       ...configValues,
       workspaceId: appConfig.workspaceId,
       projectId: appConfig.projectId,
       uiFlowName: appConfig.uiFlowName,
+    })
+  }, [configValues])
+
+  const startChat = useCallback(() => {
+    setChatSetup({
+      ...configValues,
+      workspaceId: appConfig.workspaceId,
+      projectId: appConfig.projectId,
+      workflowId: appConfig.chatWorkflowId,
     })
   }, [configValues])
 
@@ -124,10 +134,54 @@ const MainScreen = () => {
   const onLogout = useCallback(() => {
     setProcessSetup(null)
     setUiFlowSetup(null)
+    setChatSetup(null)
     setLastInstanceUuid(null)
     clearLastProcessInstanceUuid().catch(() => undefined)
     logout()
   }, [logout])
+
+  // One surface at a time: only the setup that was just opened is non-null,
+  // because the way back to the menu clears it.
+  const hasSession = !!(processSetup || uiFlowSetup || chatSetup)
+
+  const renderSession = () => {
+    // No surface can launch without both; a blank holds its place if the
+    // token is briefly absent instead of dropping back to the menu.
+    if (!accessToken || !organizationId) return <View style={styles.fallback} />
+
+    if (processSetup)
+      return (
+        <ProcessScreen
+          values={processSetup}
+          accessToken={accessToken}
+          organizationId={organizationId}
+          onBack={() => setProcessSetup(null)}
+          onProcessStarted={onProcessStarted}
+        />
+      )
+
+    if (uiFlowSetup)
+      return (
+        <UiFlowScreen
+          values={uiFlowSetup}
+          accessToken={accessToken}
+          organizationId={organizationId}
+          onBack={() => setUiFlowSetup(null)}
+        />
+      )
+
+    if (chatSetup)
+      return (
+        <ChatScreen
+          values={chatSetup}
+          accessToken={accessToken}
+          organizationId={organizationId}
+          onBack={() => setChatSetup(null)}
+        />
+      )
+
+    return null
+  }
 
   if (isRehydrating) {
     return (
@@ -140,35 +194,15 @@ const MainScreen = () => {
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
       {isAuthenticated ? (
-        processSetup ? (
-          accessToken && organizationId ? (
-            <ProcessScreen
-              values={processSetup}
-              accessToken={accessToken}
-              organizationId={organizationId}
-              onBack={() => setProcessSetup(null)}
-              onProcessStarted={onProcessStarted}
-            />
-          ) : (
-            <View style={styles.fallback} />
-          )
-        ) : uiFlowSetup ? (
-          accessToken && organizationId ? (
-            <UiFlowScreen
-              values={uiFlowSetup}
-              accessToken={accessToken}
-              organizationId={organizationId}
-              onBack={() => setUiFlowSetup(null)}
-            />
-          ) : (
-            <View style={styles.fallback} />
-          )
+        hasSession ? (
+          renderSession()
         ) : (
           <View style={styles.main}>
             <View style={styles.buttons}>
               <FlxButton onPress={startProcess}>Start process</FlxButton>
               <FlxButton onPress={openContinue}>Continue process</FlxButton>
               <FlxButton onPress={startUiFlow}>Start UI flow</FlxButton>
+              <FlxButton onPress={startChat}>Start chat</FlxButton>
             </View>
             <View style={styles.buttons}>
               <FlxButton onPress={onLogout}>Logout</FlxButton>

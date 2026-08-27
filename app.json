@@ -33,7 +33,8 @@
             "imageWidth": 76
           }
         }
-      ]
+      ],
+      "@flowx/react-native-ui-toolkit/app.plugin.js"
     ],
     "experiments": {
       "typedRoutes": true,
