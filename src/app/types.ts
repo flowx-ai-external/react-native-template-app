@@ -52,6 +52,16 @@ export type UiFlowLaunch = {
 
 export type UiFlowSetupValues = SdkConfigValues & UiFlowLaunch
 
+// Addressed by the workflow behind the conversation. There is no instance uuid
+// to persist: history lives on the backend and is reached from the chat header.
+export type ChatLaunch = {
+  workspaceId: string
+  projectId: string
+  workflowId: string
+}
+
+export type ChatSetupValues = SdkConfigValues & ChatLaunch
+
 export type ProcessScreenProps = {
   values: ProcessSetupValues
   accessToken: string
@@ -63,6 +73,14 @@ export type ProcessScreenProps = {
 // No `onProcessStarted`: no instance uuid, so nothing to persist or continue.
 export type UiFlowScreenProps = {
   values: UiFlowSetupValues
+  accessToken: string
+  organizationId: string
+  onBack: () => void
+}
+
+// Same shape as UiFlowScreenProps: nothing to resume, so no started callback.
+export type ChatScreenProps = {
+  values: ChatSetupValues
   accessToken: string
   organizationId: string
   onBack: () => void
