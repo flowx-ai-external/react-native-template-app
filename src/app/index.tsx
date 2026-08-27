@@ -23,7 +23,8 @@ import {
 } from '@/storage/storage'
 import { appConfig, sdkSettings } from './config'
 import { ProcessScreen } from './ProcessScreen'
-import { type ProcessSetupValues } from './types'
+import { type ProcessSetupValues, type UiFlowSetupValues } from './types'
+import { UiFlowScreen } from './UiFlowScreen'
 
 const MainScreen = () => {
   const { tokens, isAuthenticated, isRehydrating, logout } = useAuth()
@@ -31,6 +32,7 @@ const MainScreen = () => {
   const organizationId = tokens?.organizationId
 
   const [processSetup, setProcessSetup] = useState<ProcessSetupValues | null>(null)
+  const [uiFlowSetup, setUiFlowSetup] = useState<UiFlowSetupValues | null>(null)
   const [lastInstanceUuid, setLastInstanceUuid] = useState<string | null>(null)
   const [continueVisible, setContinueVisible] = useState(false)
   const [continueUuid, setContinueUuid] = useState('')
@@ -87,6 +89,16 @@ const MainScreen = () => {
     })
   }, [configValues])
 
+  // One surface at a time: opening a session drops any live one of either kind.
+  const startUiFlow = useCallback(() => {
+    setUiFlowSetup({
+      ...configValues,
+      workspaceId: appConfig.workspaceId,
+      projectId: appConfig.projectId,
+      uiFlowName: appConfig.uiFlowName,
+    })
+  }, [configValues])
+
   // Capture the running instance UUID so it can be resumed later.
   const onProcessStarted = useCallback((uuid: string) => {
     setLastInstanceUuid(uuid)
@@ -111,6 +123,7 @@ const MainScreen = () => {
 
   const onLogout = useCallback(() => {
     setProcessSetup(null)
+    setUiFlowSetup(null)
     setLastInstanceUuid(null)
     clearLastProcessInstanceUuid().catch(() => undefined)
     logout()
@@ -139,11 +152,23 @@ const MainScreen = () => {
           ) : (
             <View style={styles.fallback} />
           )
+        ) : uiFlowSetup ? (
+          accessToken && organizationId ? (
+            <UiFlowScreen
+              values={uiFlowSetup}
+              accessToken={accessToken}
+              organizationId={organizationId}
+              onBack={() => setUiFlowSetup(null)}
+            />
+          ) : (
+            <View style={styles.fallback} />
+          )
         ) : (
           <View style={styles.main}>
             <View style={styles.buttons}>
               <FlxButton onPress={startProcess}>Start process</FlxButton>
               <FlxButton onPress={openContinue}>Continue process</FlxButton>
+              <FlxButton onPress={startUiFlow}>Start UI flow</FlxButton>
             </View>
             <View style={styles.buttons}>
               <FlxButton onPress={onLogout}>Logout</FlxButton>

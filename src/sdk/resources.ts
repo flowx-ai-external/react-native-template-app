@@ -25,8 +25,8 @@ export type EnumerationValue = {
 /** Substitution tag for the session language. Accepts a bare or `@@`-prefixed key. */
 export const lookupTag = (tag: string): Promise<string | undefined> => getTag(tag)
 
-/** Sync read of an already-loaded tag; returns the code back if not loaded. */
-export const lookupCachedTag = (code: string): string => getSubstitutionTag(code)
+/** Sync read of an already-loaded tag; undefined until the tag is loaded. */
+export const lookupCachedTag = (code: string): string | undefined => getSubstitutionTag(code)
 
 /** Media item URL. Accepts the bare key or the app-uuid-prefixed store key. */
 export const lookupMediaItemURL = (mediaItemId: string): Promise<string | undefined> =>

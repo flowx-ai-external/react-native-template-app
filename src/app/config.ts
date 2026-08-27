@@ -3,6 +3,7 @@ import { type SdkSettings } from './types'
 // Process identity: what to launch and which theme to dress it in.
 export const appConfig = {
   processName: '<PROCESS_NAME>',
+  uiFlowName: '<UI_FLOW_NAME>',
   projectId: '<PROJECT_ID>',
   themeId: '<THEME_ID>',
   workspaceId: '<WORKSPACE_ID>',
@@ -21,6 +22,7 @@ export const sdkSettings: SdkSettings = {
   cacheDocuments: true,
   updateStateEnabled: true,
   customLoaderEnabled: false,
+  customStepperHeaderEnabled: false,
   customHeadersEnabled: true,
   interceptorsEnabled: true,
 }

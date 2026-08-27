@@ -7,6 +7,7 @@ import { customValidators } from '@/validators/customValidators'
 import { buildCustomHeaders } from './customHeaders'
 import { requestInterceptors, responseInterceptors } from './interceptors'
 import { customLoader } from './loaders'
+import { CustomStepperHeader } from './stepperHeader'
 
 // Self-managed custom components, keyed by componentIdentifier.
 const components = {
@@ -25,8 +26,8 @@ type ConfigureArgs = {
  *
  * Applied at once: cacheDocuments, customHeaders.
  * Applied to a live session too: updateStateEnabled.
- * Next launch only: language, locale, customLoader, interceptors, components,
- * validators.
+ * Next launch only: language, locale, customLoader, customStepperHeader,
+ * interceptors, components, validators.
  */
 export const configureFlowX = ({ settings, organizationId, themeId }: ConfigureArgs) => {
   FlowX.configure({
@@ -57,6 +58,9 @@ export const configureFlowX = ({ settings, organizationId, themeId }: ConfigureA
 
     // Omit to keep the SDK's own loaders.
     customLoader: settings.customLoaderEnabled ? customLoader : undefined,
+
+    // Replaces the default stepper band whole. Omit to keep the SDK's own.
+    customStepperHeader: settings.customStepperHeaderEnabled ? CustomStepperHeader : undefined,
 
     components,
     validators: customValidators,

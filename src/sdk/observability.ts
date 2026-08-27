@@ -38,6 +38,14 @@ export const registerObservability = ({
   // are not covered.
   teardowns.push(FlowX.logSink(consoleLogger))
 
+  // Action failures, name only. Facade-level, so it survives dispose() and
+  // covers UI flows too.
+  teardowns.push(
+    FlowX.actionErrorSink((actionName) => {
+      console.warn('[FlowX] action failed:', actionName ?? '(unnamed)')
+    })
+  )
+
   // The backend swapped the session to a new process. Notification only — the
   // SDK swaps it inside the mounted ProcessView. Single listener.
   FlowX.newProcessStarted = (processInstanceUuid: string) => {

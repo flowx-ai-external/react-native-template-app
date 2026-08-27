@@ -1,7 +1,7 @@
 # React Native Template Application (Expo)
 
-This application is a template Expo app integrating the FlowX React Native Renderer for running processes and Keycloak for managing the user session.
-The project contains sample implementations of custom components and custom validators, and covers both starting and continuing a process.
+This application is a template Expo app integrating the FlowX React Native Renderer for running processes and UI flows, and Keycloak for managing the user session.
+The project contains sample implementations of custom components and custom validators, and covers starting a process, continuing a process, and starting a UI flow.
 
 ## Project Setup Guide
 
@@ -18,6 +18,7 @@ Ensure you have the following:
 - Organization code and Keycloak Client ID
 - The UUID of the theme to be applied
 - Workspace, Project and Process identifiers for starting a process
+- The name of a UI flow in that project, for starting a UI flow
 
 ### Configuration Steps
 
@@ -94,6 +95,7 @@ The key configuration areas are detailed below:
     ```ts
     export const appConfig = {
       processName: '<PROCESS_NAME>',
+      uiFlowName: '<UI_FLOW_NAME>',
       projectId: '<PROJECT_ID>',
       themeId: '<THEME_ID>',
       workspaceId: '<WORKSPACE_ID>',
@@ -103,7 +105,9 @@ The key configuration areas are detailed below:
     } as const
     ```
 
-   The same file holds `sdkSettings`, the switchboard for the runtime-tunable SDK features (document caching, foreground refresh, custom headers, interceptors, custom loaders). These are consumed in `src/sdk/flowx.ts`, the single `FlowX.configure()` call site.
+   A UI flow is addressed by `uiFlowName` alone within the same workspace and project, and has no instance uuid and no "ended" callback: the close-X (`onClose`) and unmounting the view are its only exits, so there is no "continue UI flow" counterpart.
+
+   The same file holds `sdkSettings`, the switchboard for the runtime-tunable SDK features (document caching, foreground refresh, custom headers, interceptors, custom loaders, custom stepper header). These are consumed in `src/sdk/flowx.ts`, the single `FlowX.configure()` call site.
 
 ## Running the app
 

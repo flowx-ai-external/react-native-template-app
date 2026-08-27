@@ -11,6 +11,7 @@ export type SdkSettings = {
   updateStateEnabled: boolean
   // Next launch only.
   customLoaderEnabled: boolean
+  customStepperHeaderEnabled: boolean
   // Live for REST; SSE picks them up on later connections.
   customHeadersEnabled: boolean
   // Next launch only.
@@ -42,10 +43,27 @@ export type ProcessLaunch = StartLaunch | ContinueLaunch
 
 export type ProcessSetupValues = SdkConfigValues & ProcessLaunch
 
+// Addressed by `uiFlowName` alone — the SDK resolves build info itself.
+export type UiFlowLaunch = {
+  workspaceId: string
+  projectId: string
+  uiFlowName: string
+}
+
+export type UiFlowSetupValues = SdkConfigValues & UiFlowLaunch
+
 export type ProcessScreenProps = {
   values: ProcessSetupValues
   accessToken: string
   organizationId: string
   onBack: () => void
   onProcessStarted?: (processInstanceUuid: string) => void
+}
+
+// No `onProcessStarted`: no instance uuid, so nothing to persist or continue.
+export type UiFlowScreenProps = {
+  values: UiFlowSetupValues
+  accessToken: string
+  organizationId: string
+  onBack: () => void
 }

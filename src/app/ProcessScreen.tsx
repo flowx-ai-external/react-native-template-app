@@ -83,9 +83,6 @@ const ProcessScreen = ({
       )
     }
     const onProcessEnded = () => onBackRef.current()
-    // Action failure hook — name only, no payload.
-    const onActionError = (actionName?: string) =>
-      console.warn('[FlowX] action failed:', actionName ?? '(unnamed)')
 
     const promise =
       isContinue && processInstanceUuid
@@ -94,7 +91,6 @@ const ProcessScreen = ({
             isModal: true,
             onClose,
             onProcessEnded,
-            onActionError,
           })
         : FlowX.startProcess({
             workspaceId: workspaceId!,
@@ -103,7 +99,6 @@ const ProcessScreen = ({
             isModal: true,
             onClose,
             onProcessEnded,
-            onActionError,
             onProcessStarted: (uuid) => onProcessStartedRef.current?.(uuid),
           })
 
