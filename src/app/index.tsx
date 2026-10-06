@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { StyleSheet, View } from 'react-native'
 import { KeyboardProvider } from 'react-native-keyboard-controller'
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context'
@@ -24,7 +24,12 @@ import {
 import { ChatScreen } from './ChatScreen'
 import { appConfig, sdkSettings } from './config'
 import { ProcessScreen } from './ProcessScreen'
-import { type ChatSetupValues, type ProcessSetupValues, type UiFlowSetupValues } from './types'
+import {
+  type ChatSetupValues,
+  type ProcessSetupValues,
+  type SessionDisposer,
+  type UiFlowSetupValues,
+} from './types'
 import { UiFlowScreen } from './UiFlowScreen'
 
 const MainScreen = () => {
@@ -38,6 +43,11 @@ const MainScreen = () => {
   const [lastInstanceUuid, setLastInstanceUuid] = useState<string | null>(null)
   const [continueVisible, setContinueVisible] = useState(false)
   const [continueUuid, setContinueUuid] = useState('')
+  // The live process or UI flow session, reported by its screen.
+  const sessionRef = useRef<SessionDisposer | null>(null)
+  const onSession = useCallback((session: SessionDisposer | null) => {
+    sessionRef.current = session
+  }, [])
 
   const effectiveOrganizationId = appConfig.organizationId || organizationId
 
@@ -62,13 +72,18 @@ const MainScreen = () => {
   useEffect(
     () =>
       registerObservability({
-        // A backend-initiated swap becomes the new "continue" target.
+        // The SDK only notifies; the host shows the new process. Dispose the
+        // current session first, then continue the new one.
         onNewProcess: (uuid) => {
           setLastInstanceUuid(uuid)
           saveLastProcessInstanceUuid(uuid).catch(() => undefined)
+          sessionRef.current?.dispose()
+          sessionRef.current = null
+          setUiFlowSetup(null)
+          setProcessSetup({ ...configValues, mode: 'continue', processInstanceUuid: uuid })
         },
       }),
-    []
+    [configValues]
   )
 
   // Config in place before anything launches; ProcessScreen re-applies it.
@@ -157,6 +172,7 @@ const MainScreen = () => {
           organizationId={organizationId}
           onBack={() => setProcessSetup(null)}
           onProcessStarted={onProcessStarted}
+          onSession={onSession}
         />
       )
 
@@ -167,6 +183,7 @@ const MainScreen = () => {
           accessToken={accessToken}
           organizationId={organizationId}
           onBack={() => setUiFlowSetup(null)}
+          onSession={onSession}
         />
       )
 

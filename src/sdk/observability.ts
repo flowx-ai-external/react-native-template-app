@@ -14,7 +14,7 @@ import {
 const consoleLogger = createFormattedLogger({ theme: 'dark' })
 
 export type ObservabilityHandlers = {
-  // The backend swapped the session to a new process instance.
+  // A START_PROJECT action started a new process instance.
   onNewProcess?: (processInstanceUuid: string) => void
 }
 
@@ -46,8 +46,9 @@ export const registerObservability = ({
     })
   )
 
-  // The backend swapped the session to a new process. Notification only — the
-  // SDK swaps it inside the mounted ProcessView. Single listener.
+  // A START_PROJECT action started a new process. Notification only, like the
+  // Android and iOS SDKs: the host disposes the current session and continues
+  // the new one. Single listener.
   FlowX.newProcessStarted = (processInstanceUuid: string) => {
     console.log('[newProcessStarted]', processInstanceUuid)
     onNewProcess?.(processInstanceUuid)

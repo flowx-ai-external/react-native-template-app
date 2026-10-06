@@ -14,6 +14,7 @@ const ProcessScreen = ({
   organizationId,
   onBack,
   onProcessStarted,
+  onSession,
 }: ProcessScreenProps) => {
   // Gate on token availability, not its value: a silent refresh must not tear
   // down a running process. The rotated token arrives via setAccessToken below.
@@ -25,6 +26,7 @@ const ProcessScreen = ({
   const handleRef = useRef<FlxProcessHandle | null>(null)
   const onBackRef = useRef(onBack)
   const onProcessStartedRef = useRef(onProcessStarted)
+  const onSessionRef = useRef(onSession)
 
   useEffect(() => {
     handleRef.current = handle
@@ -37,6 +39,10 @@ const ProcessScreen = ({
   useEffect(() => {
     onProcessStartedRef.current = onProcessStarted
   }, [onProcessStarted])
+
+  useEffect(() => {
+    onSessionRef.current = onSession
+  }, [onSession])
 
   const { themeId } = values
 
@@ -109,6 +115,7 @@ const ProcessScreen = ({
           return
         }
         setHandle(h)
+        onSessionRef.current?.(h)
       })
       .catch((err: unknown) => {
         if (cancelled) return
@@ -119,6 +126,7 @@ const ProcessScreen = ({
       handleRef.current?.dispose()
       handleRef.current = null
       setHandle(null)
+      onSessionRef.current?.(null)
     }
   }, [
     hasAccessToken,

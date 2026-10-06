@@ -8,7 +8,13 @@ import { configureFlowX } from '@/sdk/flowx'
 import { sdkSettings } from './config'
 import { type UiFlowScreenProps } from './types'
 
-const UiFlowScreen = ({ values, accessToken, organizationId, onBack }: UiFlowScreenProps) => {
+const UiFlowScreen = ({
+  values,
+  accessToken,
+  organizationId,
+  onBack,
+  onSession,
+}: UiFlowScreenProps) => {
   // Gate on availability, not value: a refresh must not tear down a live flow.
   const hasAccessToken = !!accessToken
 
@@ -17,6 +23,7 @@ const UiFlowScreen = ({ values, accessToken, organizationId, onBack }: UiFlowScr
 
   const handleRef = useRef<FlxUiFlowHandle | null>(null)
   const onBackRef = useRef(onBack)
+  const onSessionRef = useRef(onSession)
 
   useEffect(() => {
     handleRef.current = handle
@@ -25,6 +32,10 @@ const UiFlowScreen = ({ values, accessToken, organizationId, onBack }: UiFlowScr
   useEffect(() => {
     onBackRef.current = onBack
   }, [onBack])
+
+  useEffect(() => {
+    onSessionRef.current = onSession
+  }, [onSession])
 
   const { themeId, workspaceId, projectId, uiFlowName } = values
 
@@ -66,6 +77,7 @@ const UiFlowScreen = ({ values, accessToken, organizationId, onBack }: UiFlowScr
           return
         }
         setHandle(h)
+        onSessionRef.current?.(h)
       })
       .catch((err: unknown) => {
         if (cancelled) return
@@ -77,6 +89,7 @@ const UiFlowScreen = ({ values, accessToken, organizationId, onBack }: UiFlowScr
       handleRef.current?.dispose()
       handleRef.current = null
       setHandle(null)
+      onSessionRef.current?.(null)
     }
   }, [
     hasAccessToken,

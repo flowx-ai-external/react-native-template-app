@@ -62,12 +62,17 @@ export type ChatLaunch = {
 
 export type ChatSetupValues = SdkConfigValues & ChatLaunch
 
+// The live session's disposer, or null once it ends. Lets the host dispose
+// explicitly, ahead of unmounting the screen.
+export type SessionDisposer = { dispose(): void }
+
 export type ProcessScreenProps = {
   values: ProcessSetupValues
   accessToken: string
   organizationId: string
   onBack: () => void
   onProcessStarted?: (processInstanceUuid: string) => void
+  onSession?: (session: SessionDisposer | null) => void
 }
 
 // No `onProcessStarted`: no instance uuid, so nothing to persist or continue.
@@ -76,6 +81,7 @@ export type UiFlowScreenProps = {
   accessToken: string
   organizationId: string
   onBack: () => void
+  onSession?: (session: SessionDisposer | null) => void
 }
 
 // Same shape as UiFlowScreenProps: nothing to resume, so no started callback.
