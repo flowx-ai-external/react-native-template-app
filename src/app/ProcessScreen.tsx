@@ -72,8 +72,8 @@ const ProcessScreen = ({
 
     // Close-X request. Notification only: the session stays live, so the host
     // confirms first. Closing means unmounting ProcessView, which onBack does.
-    // Omitting onClose hides the close-X altogether.
-    const onClose = (processName?: string) => {
+    // Omitting onDismissRequested hides the close-X altogether.
+    const onDismissRequested = (processName?: string) => {
       Alert.alert(
         'Close process',
         `Are you sure you want to close ${processName ?? 'this process'}?`,
@@ -95,7 +95,7 @@ const ProcessScreen = ({
         ? FlowX.continueProcess({
             processInstanceUuid,
             isModal: true,
-            onClose,
+            onDismissRequested,
             onProcessEnded,
           })
         : FlowX.startProcess({
@@ -103,7 +103,7 @@ const ProcessScreen = ({
             projectId: projectId!,
             processName: processName!,
             isModal: true,
-            onClose,
+            onDismissRequested,
             onProcessEnded,
             onProcessStarted: (uuid) => onProcessStartedRef.current?.(uuid),
           })

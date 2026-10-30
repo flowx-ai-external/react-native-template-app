@@ -28,7 +28,7 @@ const ChatScreen = ({ values, accessToken, organizationId, onBack }: ChatScreenP
     // covers bottom/left/right, so only the top inset is added here.
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* The chat header carries new-chat and history, but never an exit: with
-          no onClose counterpart, the host owns the way back. */}
+          no onDismissRequested counterpart, the host owns the way back. */}
       <View style={styles.topBar}>
         <Pressable onPress={onBack} hitSlop={12} accessibilityRole="button">
           <FlxText variant="p1">‹ Back</FlxText>
@@ -36,9 +36,9 @@ const ChatScreen = ({ values, accessToken, organizationId, onBack }: ChatScreenP
       </View>
 
       <FlxChatRenderer
-        apiUrl={environment.baseUrl}
-        authToken={accessToken}
-        staticAssetsPath={environment.staticAssetsPath}
+        baseUrl={environment.baseUrl}
+        accessToken={accessToken}
+        assetsBaseUrl={environment.assetsBaseUrl}
         // Shared with the renderer settings, so one edit moves both surfaces.
         language={sdkSettings.language}
         locale={sdkSettings.locale}

@@ -56,9 +56,9 @@ const UiFlowScreen = ({
     let cancelled = false
 
     // Notification only — the session stays live, so confirm first. Omitting
-    // onClose hides the close-X; with no "ended" callback it and unmount are
-    // the only exits.
-    const onClose = (name?: string) => {
+    // onDismissRequested hides the close-X; with no "ended" callback it and
+    // unmount are the only exits.
+    const onDismissRequested = (name?: string) => {
       Alert.alert('Close UI flow', `Are you sure you want to close ${name ?? 'this UI flow'}?`, [
         // Live session simply carries on.
         { text: 'Cancel', style: 'cancel' },
@@ -70,7 +70,13 @@ const UiFlowScreen = ({
       ])
     }
 
-    FlowX.startUiFlow({ workspaceId, projectId, uiFlowName, isModal: true, onClose })
+    FlowX.startUiFlow({
+      workspaceId,
+      projectId,
+      uiFlowName,
+      isModal: true,
+      onDismissRequested,
+    })
       .then((h) => {
         if (cancelled) {
           h.dispose()

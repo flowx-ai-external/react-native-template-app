@@ -13,7 +13,7 @@ import {
 } from '@flowx/react-native-ui-toolkit'
 
 // Self-managed custom component: a client details form seeded from `input.data`
-// that submits its params via the `saveData` action on `input.actionsFn`.
+// that submits its params by running the `saveData` action through `input.runAction`.
 
 type ClientDetails = {
   firstName: string
@@ -52,7 +52,10 @@ export const ClientDetailsForm = ({ input }: FlxCustomComponentProps) => {
   )
 
   const submit = useCallback(() => {
-    input?.actionsFn?.saveData?.({ ...values })
+    // Rejects when the component has no such action.
+    input?.runAction('saveData', { ...values }).catch((err: unknown) => {
+      console.warn('[ClientDetailsForm] saveData failed', err)
+    })
   }, [input, values])
 
   return (

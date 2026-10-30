@@ -10,10 +10,10 @@ export type SdkSettings = {
   // Patched into the live session too.
   updateStateEnabled: boolean
   // Next launch only.
-  customLoaderEnabled: boolean
-  customStepperHeaderEnabled: boolean
+  customLoaderProviderEnabled: boolean
+  customStepperHeaderProviderEnabled: boolean
   // Live for REST; SSE picks them up on later connections.
-  customHeadersEnabled: boolean
+  additionalHttpHeadersEnabled: boolean
   // Next launch only.
   interceptorsEnabled: boolean
 }

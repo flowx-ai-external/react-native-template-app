@@ -34,7 +34,7 @@ const HostLoader = ({ label, color }: HostLoaderProps) => {
   )
 }
 
-export const customLoader: FlxCustomLoader = {
+export const customLoaderProvider: FlxCustomLoader = {
   startProcess: <HostLoader label="Starting process…" color="#1b1b3a" />,
   reloadProcess: <HostLoader label="Reloading process…" color="#7a4a00" />,
   // Covers any blocksUi action loader.

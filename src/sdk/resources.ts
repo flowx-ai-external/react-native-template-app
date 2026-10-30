@@ -1,12 +1,12 @@
+import { getTag } from '@flowx/core-sdk/rn'
 import {
-  getEnumeration,
-  getMediaItemURL,
-  getStaticAsset,
-  getSubstitutionTag,
-  getTag,
-} from '@flowx/core-sdk/rn'
+  getEnumerationItems,
+  getMediaItemUrl,
+  getSubstitutionTagContent,
+} from '@flowx/react-native-sdk'
 
-// CMS lookups, exported by @flowx/core-sdk/rn rather than the SDK facade.
+// CMS lookups. All but getTag are re-exported by the SDK facade package;
+// getTag still comes from @flowx/core-sdk/rn.
 //
 // All of them read the session config the SDK populates at startProcess /
 // continueProcess (api url, workspace, project, build, language), so they only
@@ -26,15 +26,13 @@ export type EnumerationValue = {
 export const lookupTag = (tag: string): Promise<string | undefined> => getTag(tag)
 
 /** Sync read of an already-loaded tag; undefined until the tag is loaded. */
-export const lookupCachedTag = (code: string): string | undefined => getSubstitutionTag(code)
+export const lookupCachedTag = (key: string): string | undefined => getSubstitutionTagContent(key)
 
-/** Media item URL. Accepts the bare key or the app-uuid-prefixed store key. */
-export const lookupMediaItemURL = (mediaItemId: string): Promise<string | undefined> =>
-  getMediaItemURL(mediaItemId)
+/** Media item URL by key, read synchronously once the process loaded its media. */
+export const lookupMediaItemUrl = (key: string): string | undefined => getMediaItemUrl(key)
 
-/** Static asset URL, read synchronously from the resources store. */
-export const lookupStaticAsset = (key: string): string | undefined => getStaticAsset(key)
-
-/** Enumeration values. `parentName` selects a child level in a hierarchy. */
-export const lookupEnumeration = (name: string, parentName?: string): Promise<EnumerationValue[]> =>
-  getEnumeration(name, parentName)
+/** Enumeration values. `parentName` selects a child level; null or empty reads the first. */
+export const lookupEnumeration = (
+  name: string,
+  parentName?: string | null
+): Promise<EnumerationValue[]> => getEnumerationItems(name, parentName)

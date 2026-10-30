@@ -12,7 +12,7 @@ const appVersion = Constants.expoConfig?.version ?? '0.0.0'
 export const userAgent =
   `${appName}/${appVersion} ` + `(${Platform.OS} ${String(Platform.Version)}; FlowX-RN-SDK)`
 
-export const buildCustomHeaders = (enabled: boolean): Record<string, string> =>
+export const buildAdditionalHttpHeaders = (enabled: boolean): Record<string, string> =>
   enabled
     ? {
         'User-Agent': userAgent,

@@ -1,9 +1,9 @@
 export const environment = {
   production: false,
   baseUrl: '<BASE_URL>',
-  staticAssetsPath: '<STATIC_ASSETS_PATH>',
+  assetsBaseUrl: '<ASSETS_BASE_URL>',
   orgCode: '<ORG_CODE>',
-  processApiPath: '/onboarding',
+  enginePath: '/onboarding',
   scanTimeout: 50000,
   keycloak: {
     issuer: '<KEYCLOAK_URL>',

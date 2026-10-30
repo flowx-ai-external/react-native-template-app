@@ -15,7 +15,7 @@ const PROGRESS_COLOR = '#0000ff'
 const ratio = (value: number, total: number | undefined): number =>
   total && total > 0 ? Math.min(Math.max(value / total, 0), 1) : 0
 
-export const CustomStepperHeader = ({
+export const customStepperHeaderProvider = ({
   step,
   totalSteps,
   stepTitle,

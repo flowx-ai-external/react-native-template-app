@@ -22,9 +22,9 @@ export const sdkSettings: SdkSettings = {
   // Both default to true in the SDK; spelled out here for reference.
   cacheDocuments: true,
   updateStateEnabled: true,
-  customLoaderEnabled: false,
-  customStepperHeaderEnabled: false,
-  customHeadersEnabled: true,
+  customLoaderProviderEnabled: false,
+  customStepperHeaderProviderEnabled: false,
+  additionalHttpHeadersEnabled: true,
   interceptorsEnabled: true,
 }
 

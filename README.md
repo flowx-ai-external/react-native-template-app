@@ -14,7 +14,7 @@ Ensure you have the following:
 - Xcode (for iOS) and/or Android Studio (for Android)
 - FlowX npm registry credentials (auth token and email)
 - Organization ID
-- Environment-specific URLs (Base URL, Static Assets Path, Authentication URL)
+- Environment-specific URLs (Base URL, Assets Base URL, Authentication URL)
 - Organization code and Keycloak Client ID
 - The UUID of the theme to be applied
 - Workspace, Project and Process identifiers for starting a process
@@ -67,9 +67,9 @@ The key configuration areas are detailed below:
     export const environment = {
       production: false,
       baseUrl: '<BASE_URL>',
-      staticAssetsPath: '<STATIC_ASSETS_PATH>',
+      assetsBaseUrl: '<ASSETS_BASE_URL>',
       orgCode: '<ORG_CODE>',
-      processApiPath: '/onboarding',
+      enginePath: '/onboarding',
       scanTimeout: 50000,
       keycloak: {
         issuer: '<KEYCLOAK_URL>',
@@ -107,9 +107,9 @@ The key configuration areas are detailed below:
     } as const
     ```
 
-   A UI flow is addressed by `uiFlowName` alone within the same workspace and project, and has no instance uuid and no "ended" callback: the close-X (`onClose`) and unmounting the view are its only exits, so there is no "continue UI flow" counterpart.
+   A UI flow is addressed by `uiFlowName` alone within the same workspace and project, and has no instance uuid and no "ended" callback: the close-X (`onDismissRequested`) and unmounting the view are its only exits, so there is no "continue UI flow" counterpart.
 
-   The same file holds `sdkSettings`, the switchboard for the runtime-tunable SDK features (document caching, foreground refresh, custom headers, interceptors, custom loaders, custom stepper header). These are consumed in `src/sdk/flowx.ts`, the single `FlowX.configure()` call site.
+   The same file holds `sdkSettings`, the switchboard for the runtime-tunable SDK features (document caching, foreground refresh, additional HTTP headers, interceptors, custom loader provider, custom stepper header provider). These are consumed in `src/sdk/flowx.ts`, the single `FlowX.configure()` call site.
 
    The same file also holds `chatSettings` and `chatConfig`, which drive `src/app/ChatScreen.tsx`. The chat is configured entirely by props and never through `FlowX.configure()`, so it does not read `sdkSettings` beyond `language` and `locale`.
 
